@@ -53,6 +53,7 @@ class Venue(db.Model):
     seeking_description = db.Column(db.String(500))
     shows = db.relationship('Show', backref='venue', lazy=True)
 
+# https://stackoverflow.com/questions/64403117/how-to-call-an-attribute-inside-the-model-in-flask-sqlalchemy
     @hybrid_property
     def upcoming_shows(self):
         upcoming_shows = Show.query.filter(Show.venue_id == self.id).filter(
@@ -109,6 +110,7 @@ class Artist(db.Model):
         upcoming_shows_count = Show.query.filter(Show.artist_id == self.id).filter(
             Show.start_time >= db.func.current_date()).count()
         return upcoming_shows_count
+# https://stackoverflow.com/questions/8895208/sqlalchemy-how-to-filter-date-field
 
     @hybrid_property
     def past_shows_count(self):
@@ -288,6 +290,8 @@ def create_venue_submission():
               request.form['name'] + ' could not be listed.')
 
     return render_template('pages/home.html')
+
+# https://stackoverflow.com/questions/64423601/form-delete-method-in-flask-sqlalchemy-not-working
 
 
 @app.route('/venues/<int:venue_id>', methods=['POST'])
