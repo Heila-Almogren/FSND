@@ -43,7 +43,7 @@
 		{% endif %}
 	</div>
 	<div class="col-sm-6">
-		<img src="{{ venue.image_link }}" alt="Venue Image" />
+		<!-- <img src="{{ venue.image_link }}" alt="Venue Image" /> -->
 	</div>
 </div>
 <section>
@@ -70,9 +70,15 @@
 				<h5><a href="/artists/{{ show.artist_id }}">{{ show.artist_name }}</a></h5>
 				<h6>{{ show.start_time|datetime('full') }}</h6>
 			</div>
+
 		</div>
 		{% endfor %}
 	</div>
+    <form  method="POST" action='/venues/{{ venue.id }}'>
+		<input type="submit" value="Delete Venue"  class="btn btn-primary">
+	</form>
+
+
 </section>
 
 {% endblock %}
