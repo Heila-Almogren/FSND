@@ -198,7 +198,6 @@ def search_venues():
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
-    print("here")
 
     data = Venue.query.get(venue_id)
 
@@ -228,7 +227,7 @@ def show_venue(venue_id):
     return render_template('pages/show_venue.html', venue=data)
 
 
-@app.route('/venues/create', methods=['GET', 'POST'])
+@app.route('/venues/create')
 def create_venue_form():
     form = VenueForm()
     return render_template('forms/new_venue.html', form=form)
