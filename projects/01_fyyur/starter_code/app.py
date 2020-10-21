@@ -33,7 +33,7 @@ class Show(db.Model):
     artist_id = db.Column(
         db.Integer, db.ForeignKey('Artist.id'), nullable=False)
     start_time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
+    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'))
 
 
 class Venue(db.Model):
@@ -51,32 +51,39 @@ class Venue(db.Model):
     website = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(500))
-    shows = db.relationship('Show', backref='venue', lazy=True)
+    #shows = db.relationship('Show', backref='venue', lazy=True)
+    upcoming_shows = db.relationship("Show",
+                                     primaryjoin="and_(Venue.id==Show.venue_id, "
+                                     "Show.start_time >= db.func.current_date())")
+    past_shows = db.relationship("Show",
+                                 primaryjoin="and_(Venue.id==Show.venue_id, "
+                                 "Show.start_time < db.func.current_date())")
+
 
 # https://stackoverflow.com/questions/64403117/how-to-call-an-attribute-inside-the-model-in-flask-sqlalchemy
-    @hybrid_property
-    def upcoming_shows(self):
-        upcoming_shows = Show.query.filter(Show.venue_id == self.id).filter(
-            Show.start_time >= db.func.current_date()).all()
-        return upcoming_shows
+    # @hybrid_property
+    # def upcoming_shows(self):
+    #     upcoming_shows = Show.query.filter(Show.venue_id == self.id).filter(
+    #         Show.start_time >= db.func.current_date()).all()
+    #     return upcoming_shows
 
-    @hybrid_property
-    def past_shows(self):
-        past_shows = Show.query.filter(Show.venue_id == self.id).filter(
-            Show.start_time < db.func.current_date()).all()
-        return past_shows
+    # @hybrid_property
+    # def past_shows(self):
+    #     past_shows = Show.query.filter(Show.venue_id == self.id).filter(
+    #         Show.start_time < db.func.current_date()).all()
+    #     return past_shows
 
-    @hybrid_property
-    def upcoming_shows_count(self):
-        upcoming_shows_count = Show.query.filter(Show.venue_id == self.id).filter(
-            Show.start_time >= db.func.current_date()).count()
-        return upcoming_shows_count
+    # @hybrid_property
+    # def upcoming_shows_count(self):
+    #     upcoming_shows_count = Show.query.filter(Show.venue_id == self.id).filter(
+    #         Show.start_time >= db.func.current_date()).count()
+    #     return upcoming_shows_count
 
-    @hybrid_property
-    def past_shows_count(self):
-        past_shows_count = Show.query.filter(Show.venue_id == self.id).filter(
-            Show.start_time < db.func.current_date()).count()
-        return past_shows_count
+    # @hybrid_property
+    # def past_shows_count(self):
+    #     past_shows_count = Show.query.filter(Show.venue_id == self.id).filter(
+    #         Show.start_time < db.func.current_date()).count()
+    #     return past_shows_count
 
 
 class Artist(db.Model):
