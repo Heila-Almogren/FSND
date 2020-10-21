@@ -13,127 +13,19 @@ import dateutil.parser
 import json
 from flask_migrate import Migrate
 import datetime
-from posix import abort
+#from posix import abort
 from enum import Enum
 from sqlalchemy import func
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.sql import case
-
+from models import *
 
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-db = SQLAlchemy(app)
+#db = SQLAlchemy(app)
+db.init_app(app)
 migrate = Migrate(app, db)
-
-
-class Show(db.Model):
-    __tablename__ = 'Show'
-    id = db.Column(db.Integer, primary_key=True)
-    artist_id = db.Column(
-        db.Integer, db.ForeignKey('Artist.id'), nullable=False)
-    start_time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'))
-
-
-class Venue(db.Model):
-    __tablename__ = 'Venue'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    #area = db.Column(db.Integer, db.ForeignKey('Area.id'), nullable=True)
-    city = db.Column(db.String, nullable=True)
-    state = db.Column(db.String, nullable=True)
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    genres = db.Column(db.ARRAY(db.String(120)), nullable=True)
-    website = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean)
-    seeking_description = db.Column(db.String(500))
-    #shows = db.relationship('Show', backref='venue', lazy=True)
-    upcoming_shows = db.relationship("Show",
-                                     primaryjoin="and_(Venue.id==Show.venue_id, "
-                                     "Show.start_time >= db.func.current_date())")
-    past_shows = db.relationship("Show",
-                                 primaryjoin="and_(Venue.id==Show.venue_id, "
-                                 "Show.start_time < db.func.current_date())")
-
-
-# https://stackoverflow.com/questions/64403117/how-to-call-an-attribute-inside-the-model-in-flask-sqlalchemy
-    # @hybrid_property
-    # def upcoming_shows(self):
-    #     upcoming_shows = Show.query.filter(Show.venue_id == self.id).filter(
-    #         Show.start_time >= db.func.current_date()).all()
-    #     return upcoming_shows
-
-    # @hybrid_property
-    # def past_shows(self):
-    #     past_shows = Show.query.filter(Show.venue_id == self.id).filter(
-    #         Show.start_time < db.func.current_date()).all()
-    #     return past_shows
-
-    # @hybrid_property
-    # def upcoming_shows_count(self):
-    #     upcoming_shows_count = Show.query.filter(Show.venue_id == self.id).filter(
-    #         Show.start_time >= db.func.current_date()).count()
-    #     return upcoming_shows_count
-
-    # @hybrid_property
-    # def past_shows_count(self):
-    #     past_shows_count = Show.query.filter(Show.venue_id == self.id).filter(
-    #         Show.start_time < db.func.current_date()).count()
-    #     return past_shows_count
-
-
-class Artist(db.Model):
-    __tablename__ = 'Artist'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    #area = db.Column(db.Integer, db.ForeignKey('Area.id'), nullable=True)
-    city = db.Column(db.String)
-    state = db.Column(db.String)
-    phone = db.Column(db.String(120))
-    db.Column(db.ARRAY(db.String(120)))
-    image_link = db.Column(db.String(500))
-    genres = db.Column(db.ARRAY(db.String(120)))
-    facebook_link = db.Column(db.String(120))
-    shows = db.relationship('Show', backref='artist', lazy=True)
-
-    @hybrid_property
-    def upcoming_shows(self):
-        upcoming_shows = Show.query.filter(Show.artist_id == self.id).filter(
-            Show.start_time >= db.func.current_date()).all()
-        return upcoming_shows
-
-    @hybrid_property
-    def past_shows(self):
-        past_shows = Show.query.filter(Show.artist_id == self.id).filter(
-            Show.start_time < db.func.current_date()).all()
-        return past_shows
-
-    @hybrid_property
-    def upcoming_shows_count(self):
-        upcoming_shows_count = Show.query.filter(Show.artist_id == self.id).filter(
-            Show.start_time >= db.func.current_date()).count()
-        return upcoming_shows_count
-# https://stackoverflow.com/questions/8895208/sqlalchemy-how-to-filter-date-field
-
-    @hybrid_property
-    def past_shows_count(self):
-        past_shows_count = Show.query.filter(Show.artist_id == self.id).filter(
-            Show.start_time < db.func.current_date()).count()
-        return past_shows_count
-
-
-# class Area(db.Model):
-#     __tablename__ = 'Area'
-#     id = db.Column(db.Integer, primary_key=True)
-#     # name = db.Column(db.String)
-#     city = db.Column(db.String(120))
-#     state = db.Column(db.String(120))
-#     venues = db.relationship('Venue', backref='Area')
-#     artists = db.relationship('Artist', backref='Area')
 
 
 #----------------------------------------------------------------------------#
@@ -142,6 +34,12 @@ class Artist(db.Model):
 
 
 def format_datetime(value, format='medium'):
+    """Formats the date
+    Args:
+        date value and format type needed
+    Returns:
+        The formatted date
+    """
     date = value
     if format == 'full':
         format = "EEEE MMMM, d, y 'at' h:mma"
@@ -159,6 +57,8 @@ app.jinja_env.filters['datetime'] = format_datetime
 
 @app.route('/')
 def index():
+    """Returns:
+        The home page"""
     return render_template('pages/home.html')
 
 
@@ -166,7 +66,10 @@ def index():
 #  ----------------------------------------------------------------
 @app.route('/venues')
 def venues():
-
+    """
+    Shows venues
+    Returns:
+        a page that contains a list of all venues"""
     #data = Area.query.all()
 
     areas = []
@@ -189,9 +92,15 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
+    """
+    Shows search results.
+
+    Returns:
+        the page of search results of venues
+    """
 
     term = request.form.get('search_term', '')
-    q = Venue.query.filter(Venue.name.like(f'%{term}%'))
+    q = Venue.query.filter(Venue.name.ilike(f'%{term}%'))
     result = q.all()
     result_count = q.count()
 
@@ -205,6 +114,15 @@ def search_venues():
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
+    """
+    Shows venue information
+
+    Args:
+        venue id
+
+    Returns:
+        a page that shows details of a venue based on its ID
+    """
 
     data = Venue.query.get(venue_id)
 
@@ -236,12 +154,17 @@ def show_venue(venue_id):
 
 @app.route('/venues/create')
 def create_venue_form():
+    """
+    Create a new venue in the databse
+    Returns:
+        a page that contains a form to create a new venue"""
     form = VenueForm()
     return render_template('forms/new_venue.html', form=form)
 
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
+    """Redirects to home page and returns the result of adding a new venue"""
 
     error = False
     try:
@@ -302,6 +225,14 @@ def create_venue_submission():
 
 @app.route('/venues/<int:venue_id>', methods=['POST'])
 def delete_venue(venue_id):
+    """
+
+    Returns:
+        the result of deleting a venue
+    Args:
+        venue id
+    """
+    # Used POST instead of delete because browser doesn't support DELETE method
     error = False
     try:
         ven = Venue.query.get(venue_id)
@@ -331,6 +262,11 @@ def delete_venue(venue_id):
 
 @app.route('/artists')
 def artists():
+    """
+    Shows all artists in database
+    Returns:
+        a page that contains a list of all artists
+    """
     data = Artist.query.all()
     return render_template('pages/artists.html', artists=data)
 
@@ -352,6 +288,15 @@ def search_artists():
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
+    """
+    Shows information of the artist
+
+    Returns:
+        a page that contains details of an artist based on his ID.
+
+    Args:
+        artist id
+    """
     data = Artist.query.get(artist_id)
 
     # shows = {
@@ -385,6 +330,13 @@ def show_artist(artist_id):
 
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
+    """
+    Form of editing artist.
+
+    Returns:
+        a page that contains a form to edit an artist.
+    Args:
+        Artist id"""
     form = ArtistForm()
     artist = Artist.query.get(artist_id)
     # TODO: populate form with fields from artist with ID <artist_id>
@@ -395,7 +347,13 @@ def edit_artist(artist_id):
 def edit_artist_submission(artist_id):
     # TODO: take values from the form submitted, and update existing
     # artist record with ID <artist_id> using the new attributes
-
+    """
+    edit artist info in database.
+    Returns:
+        Redirects to artist page returning the result of editing his details.
+    Args:
+        artist id
+    """
     error = False
     try:
 
@@ -428,6 +386,13 @@ def edit_artist_submission(artist_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
+    """
+    Editing a venue information
+
+    Returns:
+        a page that contains a form to edit a venue
+    Args:
+        Venue id"""
     form = VenueForm()
     venue = Venue.query.get(venue_id)
     # TODO: populate form with values from venue with ID <venue_id>
@@ -436,6 +401,13 @@ def edit_venue(venue_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
+    """
+    editing a venue
+    Returns:
+        a message of the result of a editing a venue on venue page.
+    Args:
+        Venue id"""
+
     # TODO: take values from the form submitted, and update existing
     # venue record with ID <venue_id> using the new attributes
 
@@ -474,12 +446,22 @@ def edit_venue_submission(venue_id):
 
 @app.route('/artists/create', methods=['GET'])
 def create_artist_form():
+    """
+    form of editing artist
+    Returns:
+        a page that contains a form to create a new artist record"""
     form = ArtistForm()
     return render_template('forms/new_artist.html', form=form)
 
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
+    """
+    creates a new artist
+
+    Returns: 
+        Redirects to home page showing the result of adding a new artist"""
+
     # called upon submitting the new artist listing form
     # TODO: insert form data as a new Venue record in the db, instead
     # TODO: modify data to be the data object returned from db insertion
@@ -525,12 +507,23 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
+    """
+    Showing the list of all shows in database
+
+    Returns:
+        a page that contains a list of all shows"""
     data = Show.query.all()
     return render_template('pages/shows.html', shows=data)
 
 
 @app.route('/shows/create')
 def create_shows():
+    """
+    A form to createa show
+
+    Returns:
+        a page that contains a form to create a new show record"""
+
     # renders form. do not touch.
     form = ShowForm()
     return render_template('forms/new_show.html', form=form)
@@ -538,6 +531,11 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
+    """
+    Adds a new show in the databse
+    Returns:
+        Redirects to home page showing the result of adding the new show"""
+
     # called to create new shows in the db, upon submitting new show listing form
     # TODO: insert form data as a new Show record in the db, instead
 
