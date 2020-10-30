@@ -4,7 +4,7 @@ import $ from 'jquery';
 import '../stylesheets/FormView.css';
 
 class FormView extends Component {
-  constructor(props){
+  constructor(props) {
     super();
     this.state = {
       question: "",
@@ -15,7 +15,7 @@ class FormView extends Component {
     }
   }
 
-  componentDidMount(){
+  componentDidMount() {
     $.ajax({
       url: `/categories`, //TODO: update request URL
       type: "GET",
@@ -24,7 +24,7 @@ class FormView extends Component {
         return;
       },
       error: (error) => {
-        alert('Unable to load categories. Please try your request again')
+        alert('hmm.. Unable to load categories. Please try your request again')
         return;
       }
     })
@@ -60,7 +60,7 @@ class FormView extends Component {
   }
 
   handleChange = (event) => {
-    this.setState({[event.target.name]: event.target.value})
+    this.setState({ [event.target.name]: event.target.value })
   }
 
   render() {
@@ -70,11 +70,11 @@ class FormView extends Component {
         <form className="form-view" id="add-question-form" onSubmit={this.submitQuestion}>
           <label>
             Question
-            <input type="text" name="question" onChange={this.handleChange}/>
+            <input type="text" name="question" onChange={this.handleChange} />
           </label>
           <label>
             Answer
-            <input type="text" name="answer" onChange={this.handleChange}/>
+            <input type="text" name="answer" onChange={this.handleChange} />
           </label>
           <label>
             Difficulty
@@ -90,10 +90,10 @@ class FormView extends Component {
             Category
             <select name="category" onChange={this.handleChange}>
               {Object.keys(this.state.categories).map(id => {
-                  return (
-                    <option key={id} value={id}>{this.state.categories[id]}</option>
-                  )
-                })}
+                return (
+                  <option key={id} value={id}>{this.state.categories[id]}</option>
+                )
+              })}
             </select>
           </label>
           <input type="submit" className="button" value="Submit" />
